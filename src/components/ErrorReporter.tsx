@@ -1,4 +1,4 @@
-const pollRef = useRef<NodeJS.Timeout>();
+"use client";
 
 import { useEffect, useRef } from "react";
 
