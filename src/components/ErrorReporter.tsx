@@ -11,8 +11,8 @@ type ReporterProps = {
 export default function ErrorReporter({ error, reset }: ReporterProps) {
   /* ─ instrumentation shared by every route ─ */
   const lastOverlayMsg = useRef("");
-  // ✅ Correct timer type + initial value
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // In the browser, setInterval returns a number
+  const pollRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
