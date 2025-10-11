@@ -11,9 +11,12 @@ type ReporterProps = {
 export default function ErrorReporter({ error, reset }: ReporterProps) {
   /* ─ instrumentation shared by every route ─ */
   const lastOverlayMsg = useRef("");
-  const pollRef = useRef<NodeJS.Timeout>();
+  // ✅ Correct timer type + initial value
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
     const inIframe = window.parent !== window;
     if (!inIframe) return;
 
@@ -63,18 +66,21 @@ export default function ErrorReporter({ error, reset }: ReporterProps) {
 
     window.addEventListener("error", onError);
     window.addEventListener("unhandledrejection", onReject);
-    pollRef.current = setInterval(pollOverlay, 1000);
+    pollRef.current = window.setInterval(pollOverlay, 1000);
 
     return () => {
       window.removeEventListener("error", onError);
       window.removeEventListener("unhandledrejection", onReject);
-      pollRef.current && clearInterval(pollRef.current);
+      if (pollRef.current !== null) {
+        window.clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
     };
   }, []);
 
   /* ─ extra postMessage when on the global-error route ─ */
   useEffect(() => {
-    if (!error) return;
+    if (typeof window === "undefined" || !error) return;
     window.parent.postMessage(
       {
         type: "global-error-reset",
